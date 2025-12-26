@@ -18,10 +18,10 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install dependencies and Android SDK
+    - name: Install dependencies, Ant and Android SDK
       run: |
         sudo apt update
-        sudo apt install -y zip unzip openjdk-17-jdk python3-pip git wget curl
+        sudo apt install -y zip unzip openjdk-17-jdk python3-pip git wget curl ant
         pip install kivy buildozer cython
 
         # 安装 Android SDK 命令行工具
@@ -30,13 +30,13 @@ jobs:
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip
         mkdir -p latest
-        mv cmdline-tools/* latest/  # 修复 mv 错误，不会移动 latest 自己
+        mv cmdline-tools/* latest/  # 修复 mv 错误
         # 接受 license
         yes | latest/bin/sdkmanager --licenses
         latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
         export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin
+        export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
     - name: Build APK with Buildozer
       run: |
