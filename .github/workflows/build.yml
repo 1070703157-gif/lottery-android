@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:  # 支持手动触发
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,7 +23,6 @@ jobs:
         sudo apt update
         sudo apt install -y zip unzip openjdk-17-jdk python3-pip git wget curl
         pip install kivy buildozer cython
-        # 安装 Android SDK 命令行工具
         mkdir -p $HOME/android-sdk
         cd $HOME/android-sdk
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
