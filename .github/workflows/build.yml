@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
   build:
@@ -23,14 +23,18 @@ jobs:
         sudo apt update
         sudo apt install -y zip unzip openjdk-17-jdk python3-pip git wget curl
         pip install kivy buildozer cython
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
+
+        # 安装 Android SDK 命令行工具
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        mkdir -p latest
+        mv cmdline-tools/* latest/  # 修复 mv 错误，不会移动 latest 自己
+        # 接受 license
+        yes | latest/bin/sdkmanager --licenses
+        latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
         export ANDROID_HOME=$HOME/android-sdk
         export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin
 
