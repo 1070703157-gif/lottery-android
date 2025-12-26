@@ -4,6 +4,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.spinner import Spinner
 import random, time, os
 
 PRICE = {
@@ -11,13 +12,19 @@ PRICE = {
     "双色球": 2,
     "排列三": 2,
     "排列五": 2,
-    "福彩3D": 2
+    "福彩3D": 2,
+    "7星彩": 2,
+    "七星彩": 2,
+    "11选5": 2,
+    "体彩快乐8": 2,
+    "福彩快乐8": 2,
+    "七乐彩": 2
 }
 
 def hot_pool(start, end):
     pool = []
     for i in range(start, end + 1):
-        pool += [i] * random.randint(1, 10)
+        pool.extend([i] * random.randint(1, 10))
     return pool
 
 def pick(pool, n):
@@ -26,6 +33,7 @@ def pick(pool, n):
         s.add(random.choice(pool))
     return sorted(s)
 
+# ===== 玩法函数 =====
 def 大乐透():
     return f"前区 {pick(hot_pool(1,35),5)} 后区 {pick(hot_pool(1,12),2)}"
 
@@ -41,32 +49,63 @@ def 排列五():
 def 福彩3D():
     return ''.join(str(random.randint(0,9)) for _ in range(3))
 
+def 7星彩():
+    return ''.join(str(random.randint(0,9)) for _ in range(7))
+
+def 七星彩():
+    return ''.join(str(random.randint(0,9)) for _ in range(7))
+
+def 11选5():
+    return pick(hot_pool(1,11),5)
+
+def 体彩快乐8():
+    return pick(hot_pool(1,80),20)
+
+def 福彩快乐8():
+    return pick(hot_pool(1,80),20)
+
+def 七乐彩():
+    return pick(hot_pool(1,30),7)
+
+PLAY_FUNC = {
+    "超级大乐透": 大乐透,
+    "双色球": 双色球,
+    "排列三": 排列三,
+    "排列五": 排列五,
+    "福彩3D": 福彩3D,
+    "7星彩": 7星彩,
+    "七星彩": 七星彩,
+    "11选5": 11选5,
+    "体彩快乐8": 体彩快乐8,
+    "福彩快乐8": 福彩快乐8,
+    "七乐彩": 七乐彩
+}
+
 class LotteryUI(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(orientation='vertical', **kwargs)
 
-        self.play = "超级大乐透"
+        self.spinner = Spinner(
+            text="超级大乐透",
+            values=list(PLAY_FUNC.keys()),
+            size_hint_y=None,
+            height=80
+        )
+        self.add_widget(self.spinner)
 
         self.input = TextInput(
-            hint_text="生成注数",
+            hint_text="生成注数（默认1）",
             multiline=False,
             size_hint_y=None,
             height=80
         )
         self.add_widget(self.input)
 
-        btns = BoxLayout(size_hint_y=None, height=100)
-        for name in ["超级大乐透", "双色球", "排列三", "排列五", "福彩3D"]:
-            b = Button(text=name)
-            b.bind(on_press=lambda x, n=name: self.set_play(n))
-            btns.add_widget(b)
-        self.add_widget(btns)
-
-        gen = Button(text="生成号码", size_hint_y=None, height=100)
+        gen = Button(text="生成号码", size_hint_y=None, height=90)
         gen.bind(on_press=self.generate)
         self.add_widget(gen)
 
-        save = Button(text="保存投注单", size_hint_y=None, height=100)
+        save = Button(text="保存投注单", size_hint_y=None, height=90)
         save.bind(on_press=self.save)
         self.add_widget(save)
 
@@ -77,33 +116,23 @@ class LotteryUI(BoxLayout):
         scroll.add_widget(self.label)
         self.add_widget(scroll)
 
-    def set_play(self, name):
-        self.play = name
-
     def generate(self, instance):
+        play = self.spinner.text
+        func = PLAY_FUNC[play]
+
         try:
             count = int(self.input.text)
         except:
             count = 1
 
-        result = []
+        lines = []
         for i in range(count):
-            if self.play == "超级大乐透":
-                num = 大乐透()
-            elif self.play == "双色球":
-                num = 双色球()
-            elif self.play == "排列三":
-                num = 排列三()
-            elif self.play == "排列五":
-                num = 排列五()
-            else:
-                num = 福彩3D()
-            result.append(f"{i+1:02d} {self.play} {num}")
+            lines.append(f"{i+1:02d} {play} {func()}")
 
-        money = count * PRICE.get(self.play, 2)
-        result.append(f"\n共 {count} 注，金额 {money} 元")
+        money = count * PRICE.get(play, 2)
+        lines.append(f"\n共 {count} 注  合计 {money} 元")
 
-        self.label.text = "\n".join(result)
+        self.label.text = "\n".join(lines)
 
     def save(self, instance):
         path = os.path.join(
@@ -112,10 +141,11 @@ class LotteryUI(BoxLayout):
         )
         with open(path, "w", encoding="utf-8") as f:
             f.write(self.label.text)
-        self.label.text += "\n\n已保存到本地"
+        self.label.text += "\n\n【已保存到本地】"
 
 class LotteryApp(App):
     def build(self):
+        self.title = "彩票选号助手"
         return LotteryUI()
 
 LotteryApp().run()
