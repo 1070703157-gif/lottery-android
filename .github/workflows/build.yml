@@ -3,33 +3,22 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y zip unzip openjdk-17-jdk python3-pip git wget curl
-        pip install kivy buildozer cython
-        # 安装 Android SDK 命令行工具
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmdline-tools.zip
-        unzip cmdline-tools.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"    - name: Install dependencies
+    - name: Install dependencies and Android SDK
       run: |
         sudo apt update
         sudo apt install -y zip unzip openjdk-17-jdk python3-pip git wget curl
@@ -43,8 +32,10 @@ jobs:
         mv cmdline-tools/* cmdline-tools/latest/
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin
 
-    - name: Build APK
+    - name: Build APK with Buildozer
       run: |
         buildozer android debug
 
